@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Morse Pramuka</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #1a472a, #2d6a4f);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 700px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+h1 {
+  text-align: center;
+  color: #1a472a;
+  margin-bottom: 5px;
+}
+h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #2d6a4f;
+  background: transparent;
+  color: #2d6a4f;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  min-width: 100px;
+  transition: all 0.2s;
+}
+.tab:hover { background: #d8f3dc; }
+.tab.active { background: #2d6a4f; color: #fff; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Morse Chart */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+.chart-item {
+  background: #f0fdf4;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.chart-item:hover { background: #d8f3dc; }
+.chart-item .letter { font-size: 24px; font-weight: bold; color: #1a472a; }
+.chart-item .code { font-size: 14px; color: #555; margin-top: 4px; font-family: monospace; }
+
+/* Quiz */
+.quiz-area {
+  text-align: center;
+  padding: 20px 0;
+}
+.morse-display {
+  font-size: 48px;
+  font-family: monospace;
+  letter-spacing: 2px;
+  color: #1a472a;
+  min-height: 60px;
+  margin: 15px 0;
+}
+.morse-display.big-dot::before { content: '•'; color: #2d6a4f; }
+.btn {
+  padding: 12px 30px;
+  background: #2d6a4f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  margin: 5px;
+}
+.btn:hover { background: #1a472a; transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn.secondary { background: #52b788; }
+.btn.secondary:hover { background: #40916c; }
+.btn.danger { background: #e63946; }
+.btn.danger:hover { background: #c1121f; }
+.btn.ghost { background: transparent; color: #2d6a4f; border: 2px solid #2d6a4f; }
+.btn.ghost:hover { background: #d8f3dc; }
+
+.letter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 15px 0;
+}
+.letter-opt {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #2d6a4f;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d6a4f;
+  cursor: pointer;
+  transition: 0.2s;
+  background: #fff;
+}
+.letter-opt:hover { background: #d8f3dc; }
+.letter-opt.correct { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+.letter-opt.wrong { background: #e63946; color: #fff; border-color: #e63946; }
+
+.score { font-size: 18px; color: #555; margin: 10px 0; }
+.score span { font-weight: bold; color: #1a472a; }
+
+/* Input Morse */
+.morse-input-area {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+.morse-btn {
+  width: 60px;
+  height: 60px;
+  border: 2px solid #2d6a4f;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  background: #fff;
+  color: #2d6a4f;
+  transition: 0.15s;
+}
+.morse-btn:hover { background: #d8f3dc; }
+.morse-btn:active, .morse-btn.pressed { background: #2d6a4f; color: #fff; }
+.morse-btn.tit { width: 60px; border-radius: 50%; }
+.morse-btn.tah { width: 80px; border-radius: 12px; }
+
+.input-display {
+  font-size: 36px;
+  font-family: monospace;
+  letter-spacing: 6px;
+  min-height: 50px;
+  color: #1a472a;
+  margin: 10px 0;
+}
+
+.result-msg {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 10px 0;
+  min-height: 30px;
+}
+.result-msg.correct { color: #2d6a4f; }
+.result-msg.wrong { color: #e63946; }
+
+/* Info Box */
+.info-box {
+  background: #f0fdf4;
+  border: 1px solid #b7e4c7;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 10px 0;
+  text-align: left;
+}
+.info-box h3 { color: #1a472a; margin-bottom: 8px; }
+.info-box p { color: #555; line-height: 1.6; }
+.info-box code {
+  background: #d8f3dc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  color: #999;
+  font-size: 12px;
+}
+
+/* Player bar */
+.player-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border: 1px solid #b7e4c7;
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.player-bar .name { font-weight: bold; color: #1a472a; }
+.player-bar .total-score { color: #2d6a4f; }
+.player-bar button {
+  background: transparent;
+  border: 1px solid #2d6a4f;
+  color: #2d6a4f;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.player-bar button:hover { background: #d8f3dc; }
+
+/* Modal overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.modal-box h2 { color: #1a472a; margin-bottom: 8px; }
+.modal-box p { color: #666; font-size: 14px; margin-bottom: 16px; }
+.modal-box input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #b7e4c7;
+  border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+  margin-bottom: 12px;
+}
+.modal-box input:focus { border-color: #2d6a4f; }
+
+/* Leaderboard */
+.lb-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  gap: 8px;
+  padding: 10px 12px;
+  font-weight: bold;
+  color: #1a472a;
+  border-bottom: 2px solid #b7e4c7;
+  font-size: 13px;
+}
+.lb-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e8f5e9;
+  font-size: 14px;
+  align-items: center;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row .rank { text-align: center; font-weight: bold; color: #888; }
+.lb-row .rank.gold { color: #d4a017; }
+.lb-row .rank.silver { color: #a8a8a8; }
+.lb-row .rank.bronze { color: #cd7f32; }
+.lb-row .name { color: #333; }
+.lb-row .score { text-align: right; font-weight: bold; color: #2d6a4f; }
+.lb-empty {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-size: 14px;
+}
+.lb-refresh {
+  text-align: right;
+  margin-top: 8px;
+}
+.lb-refresh button {
+  background: transparent;
+  border: none;
+  color: #52b788;
+  cursor: pointer;
+  font-size: 12px;
+}
+.lb-refresh button:hover { text-decoration: underline; }
+
+/* Cerdas Cermat */
+.cc-opt {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #b7e4c7;
+  border-radius: 10px;
+  background: #fff;
+  color: #333;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cc-opt:hover { background: #d8f3dc; border-color: #2d6a4f; }
+.cc-opt .label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2d6a4f;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.cc-opt.correct { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+.cc-opt.correct .label { background: #fff; color: #2d6a4f; }
+.cc-opt.wrong { background: #e63946; color: #fff; border-color: #e63946; }
+.cc-opt.wrong .label { background: #fff; color: #e63946; }
+.cc-opt:disabled { cursor: default; opacity: 0.8; }
+.cc-opt:disabled:hover { background: inherit; border-color: inherit; }
+.cc-opt:disabled.cc-opt.correct:hover { background: #2d6a4f; }
+.cc-opt:disabled.cc-opt.wrong:hover { background: #e63946; }
+
+#ccTimer.warning { color: #e63946; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.4; } }
+
+.cc-tab {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #52b788;
+  background: transparent;
+  color: #52b788;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.cc-tab:hover { background: #d8f3dc; }
+.cc-tab.active { background: #52b788; color: #fff; }
+.cc-section { display: none; }
+.cc-section.active { display: block; }
+
+.lb-tab {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #52b788;
+  background: transparent;
+  color: #52b788;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.lb-tab:hover { background: #d8f3dc; }
+.lb-tab.active { background: #52b788; color: #fff; }
+.lb-section { display: none; }
+.lb-section.active { display: block; }
+
+/* Admin */
+.admin-link {
+  cursor: pointer;
+  color: #ccc;
+  font-size: 11px;
+  text-decoration: none;
+}
+.admin-link:hover { color: #999; }
+
+.admin-panel { display: none; }
+.admin-panel.show { display: block; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-table th, .admin-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e8f5e9;
+}
+.admin-table th {
+  background: #d8f3dc;
+  color: #1a472a;
+  font-weight: bold;
+}
+.admin-table tr:hover td { background: #f0fdf4; }
+.admin-table .actions { white-space: nowrap; }
+.admin-table .actions button {
+  padding: 3px 10px;
+  border: 1px solid #2d6a4f;
+  border-radius: 4px;
+  background: #fff;
+  color: #2d6a4f;
+  cursor: pointer;
+  font-size: 11px;
+  margin: 0 2px;
+}
+.admin-table .actions button:hover { background: #d8f3dc; }
+.admin-table .actions button.danger { border-color: #e63946; color: #e63946; }
+.admin-table .actions button.danger:hover { background: #ffe5e5; }
+.admin-table input {
+  padding: 4px 6px;
+  border: 1px solid #b7e4c7;
+  border-radius: 4px;
+  font-size: 12px;
+  width: 80px;
+}
+
+.admin-section { margin-bottom: 20px; }
+.admin-section h4 {
+  color: #1a472a;
+  margin-bottom: 8px;
+  font-size: 15px;
+  border-bottom: 2px solid #b7e4c7;
+  padding-bottom: 4px;
+}
+
+.sema-sub-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.sema-tab {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #52b788;
+  background: transparent;
+  color: #52b788;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.sema-tab:hover { background: #d8f3dc; }
+.sema-tab.active { background: #52b788; color: #fff; }
+.sema-section { display: none; }
+.sema-section.active { display: block; }
+
+.sema-chart-item {
+  background: #f0fdf4;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.sema-chart-item:hover { background: #d8f3dc; }
+.sema-chart-item .letter { font-size: 22px; font-weight: bold; color: #1a472a; }
+.sema-chart-item canvas { display: block; margin: 4px auto; }
+.sema-chart-item .pos-label { font-size: 11px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏕️ Game Morse Pramuka <small>Latihan sandi morse untuk pramuka</small></h1>
+
+  <div class="player-bar" id="playerBar" style="display:none;">
+    <span>👤 <span class="name" id="playerNameDisplay"></span></span>
+    <button id="changeNameBtn">Ganti Nama</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="quiz">🎯 Tebak Morse</button>
+    <button class="tab" data-tab="input">✍️ Ketik Morse</button>
+    <button class="tab" data-tab="chart">📖 Tabel Morse</button>
+    <button class="tab" data-tab="semaphore">🚩 Semaphore</button>
+    <button class="tab" data-tab="leaderboard">🏆 Peringkat</button>
+    <button class="tab" data-tab="cerdas">🧠 Cerdas Cermat</button>
+  </div>
+
+  <!-- Quiz Panel -->
+  <div class="panel active" id="panel-quiz">
+    <div class="quiz-area">
+      <p style="color:#666;">Dengar atau lihat kode morse, lalu tebak hurufnya!</p>
+      <div class="morse-display" id="quizMorse">• —</div>
+      <div>
+        <button class="btn secondary" id="playSoundBtn">🔊 Putar Suara</button>
+        <button class="btn ghost" id="nextQuizBtn">➡️ Soal Berikutnya</button>
+      </div>
+      <div class="letter-options" id="letterOptions"></div>
+      <div class="result-msg" id="quizResult"></div>
+      <div class="score">Skor: <span id="scoreCorrect">0</span> / <span id="scoreTotal">0</span></div>
+    </div>
+  </div>
+
+  <!-- Input Panel -->
+  <div class="panel" id="panel-input">
+    <div class="quiz-area">
+      <p style="color:#666;">Ketik kode morse untuk huruf: <strong id="targetLetter" style="font-size:28px;color:#1a472a;">A</strong></p>
+      <div class="input-display" id="inputDisplay"></div>
+      <div class="morse-input-area">
+        <button class="morse-btn tit" id="dotBtn">•</button>
+        <button class="morse-btn tah" id="dashBtn">—</button>
+        <button class="btn ghost" id="clearBtn" style="width:60px;height:60px;padding:0;display:flex;align-items:center;justify-content:center;">⌫</button>
+      </div>
+      <button class="btn" id="checkInputBtn">✔️ Cek Jawaban</button>
+      <button class="btn ghost" id="nextInputBtn">➡️ Soal Berikutnya</button>
+      <div class="result-msg" id="inputResult"></div>
+      <div class="score">Skor: <span id="inputScoreCorrect">0</span> / <span id="inputScoreTotal">0</span></div>
+      <div class="info-box">
+        <h3>✏️ Cara mengetik morse:</h3>
+        <p>Tekan <code>•</code> untuk titik (dit) dan <code>—</code> untuk garis (dah).<br>
+        Contoh: <b>A</b> = <code>• —</code>, <b>B</b> = <code>— • • •</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Panel -->
+  <div class="panel" id="panel-chart">
+    <div class="info-box">
+      <h3>📖 Tabel Sandi Morse Internasional</h3>
+      <p>Klik huruf untuk mendengar suara morse-nya.</p>
+    </div>
+    <div class="chart-grid" id="chartGrid"></div>
+  </div>
+
+  <!-- Semaphore Panel -->
+  <div class="panel" id="panel-semaphore">
+    <div class="sema-sub-tabs">
+      <button class="sema-tab active" data-sema="quiz">🎯 Quiz</button>
+      <button class="sema-tab" data-sema="chart">📖 Tabel</button>
+    </div>
+
+    <div class="sema-section active" id="sema-quiz">
+      <div class="quiz-area">
+        <p style="color:#666;">Lihat posisi bendera semaphore, lalu tebak hurufnya!</p>
+        <canvas id="semaCanvas" width="220" height="220" style="margin:10px auto;display:block;max-width:100%;"></canvas>
+        <div>
+          <button class="btn ghost" id="nextSemaBtn">➡️ Soal Berikutnya</button>
+        </div>
+        <div class="letter-options" id="semaOptions"></div>
+        <div class="result-msg" id="semaResult"></div>
+        <div class="score">Skor: <span id="semaScoreCorrect">0</span> / <span id="semaScoreTotal">0</span></div>
+        <div class="info-box">
+          <h3>🚩 Cara Membaca Semaphore:</h3>
+          <p>Perhatikan arah kedua bendera. Setiap posisi mewakili angka 1-8 pada jam:<br>
+          <code>1</code> atas <code>2</code> kanan atas <code>3</code> kanan <code>4</code> kanan bawah<br>
+          <code>5</code> bawah <code>6</code> kiri bawah <code>7</code> kiri <code>8</code> kiri atas</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sema-section" id="sema-chart">
+      <div class="info-box">
+        <h3>📖 Tabel Semaphore</h3>
+        <p>Klik huruf untuk melihat posisi benderanya.</p>
+      </div>
+      <div class="chart-grid" id="semaChartGrid"></div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Panel -->
+  <div class="panel" id="panel-leaderboard">
+    <div class="sema-sub-tabs">
+      <button class="lb-tab active" data-lb="morse">🎯 Morse</button>
+      <button class="lb-tab" data-lb="sema">🚩 Semaphore</button>
+      <button class="lb-tab" data-lb="cc">🧠 Cerdas Cermat</button>
+    </div>
+
+    <div class="lb-section active" id="lb-morse">
+      <div class="info-box">
+        <h3>🎯 Peringkat Morse</h3>
+        <p>Skor dari Tebak Morse + Ketik Morse.</p>
+      </div>
+      <div class="lb-header"><span>#</span><span>Nama</span><span style="text-align:right;">Skor</span></div>
+      <div id="lbMorseBody"></div>
+    </div>
+
+    <div class="lb-section" id="lb-sema">
+      <div class="info-box">
+        <h3>🚩 Peringkat Semaphore</h3>
+        <p>Skor dari quiz semaphore.</p>
+      </div>
+      <div class="lb-header"><span>#</span><span>Nama</span><span style="text-align:right;">Skor</span></div>
+      <div id="lbSemaBody"></div>
+    </div>
+
+    <div class="lb-section" id="lb-cc">
+      <div class="info-box">
+        <h3>🧠 Peringkat Cerdas Cermat</h3>
+        <p>Skor dari 25 soal cerdas cermat.</p>
+      </div>
+      <div class="lb-header"><span>#</span><span>Nama</span><span style="text-align:right;">Skor</span></div>
+      <div id="lbCcBody"></div>
+    </div>
+
+    <div class="lb-refresh">
+      <button id="refreshLbBtn">↻ Muat ulang semua</button>
+    </div>
+  </div>
+
+  <!-- Cerdas Cermat Panel -->
+  <div class="panel" id="panel-cerdas">
+    <div class="cc-section active" id="cc-quiz">
+      <div id="ccSetup" class="quiz-area">
+        <p style="font-size:20px;font-weight:bold;color:#1a472a;">🧠 Cerdas Cermat Pramuka</p>
+        <p style="color:#666;margin:8px 0;">25 soal pilihan ganda — waktu 40 menit</p>
+        <div style="margin:20px 0;">
+          <p style="color:#555;margin-bottom:12px;">Klik tombol untuk memulai!</p>
+          <button class="btn" id="ccStartBtn">🚀 Mulai Cerdas Cermat</button>
+        </div>
+      </div>
+
+      <div id="ccQuiz" class="quiz-area" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <span style="font-weight:bold;color:#1a472a;">Soal <span id="ccCurrent">1</span>/25</span>
+          <span id="ccTimer" style="font-size:20px;font-weight:bold;color:#e63946;">⏱ 40:00</span>
+        </div>
+        <div class="info-box" style="text-align:left;">
+          <p id="ccQuestion" style="font-size:16px;font-weight:bold;color:#1a472a;"></p>
+        </div>
+        <div id="ccOptions" class="letter-options" style="flex-direction:column;align-items:stretch;max-width:400px;margin:12px auto;"></div>
+        <div class="result-msg" id="ccResult"></div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+          <button class="btn ghost" id="ccNextBtn" style="display:none;">➡️ Soal Berikutnya</button>
+          <button class="btn ghost" id="ccFinishBtn" style="display:none;">🏁 Selesai</button>
+        </div>
+      </div>
+
+      <div id="ccResultScreen" class="quiz-area" style="display:none;">
+        <p style="font-size:24px;font-weight:bold;color:#1a472a;">🏁 Selesai!</p>
+        <p style="font-size:18px;color:#555;margin:12px 0;">
+          Skor: <span id="ccFinalScore" style="font-weight:bold;color:#2d6a4f;font-size:32px;">0</span>/25
+        </p>
+        <p id="ccFinalMsg" style="color:#666;"></p>
+        <button class="btn" id="ccResetBtn" style="margin-top:12px;">🔄 Coba Lagi</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Game Morse Pramuka Indonesia 🇮🇩 · <a class="admin-link" id="adminLink">🔑 Admin</a></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal-box">
+    <h2>🏕️ Selamat Datang!</h2>
+    <p>Masukkan nama panggilanmu untuk memulai permainan</p>
+    <input type="text" id="nameInput" placeholder="Nama panggilan..." maxlength="20" autocomplete="off">
+    <button class="btn" id="nameSubmitBtn" style="width:100%;">Mulai Bermain</button>
+  </div>
+</div>
+
+<!-- Modal Admin -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-box">
+    <h2>🔑 Admin</h2>
+    <p>Masukkan password admin</p>
+    <input type="password" id="adminPassInput" placeholder="Password..." maxlength="30" autocomplete="off">
+    <p id="adminPassError" style="color:#e63946;font-size:13px;display:none;">Password salah!</p>
+    <button class="btn" id="adminLoginBtn" style="width:100%;">Masuk</button>
+    <button class="btn ghost" id="adminCancelBtn" style="width:100%;margin-top:6px;">Batal</button>
+  </div>
+</div>
+
+<!-- Admin Dashboard -->
+<div class="modal-overlay" id="adminDashModal">
+  <div class="modal-box" style="max-width:650px;max-height:80vh;overflow-y:auto;text-align:left;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0;">🔑 Panel Admin</h2>
+      <button id="adminLogoutBtn" class="btn ghost" style="padding:6px 16px;font-size:12px;">Keluar</button>
+    </div>
+    <div id="adminDashboard">Memuat data...</div>
+  </div>
+</div>
+
+<script>
+// ========== MORSE DATA ==========
+const MORSE = {
+  'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
+  'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+  'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
+  'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+  'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
+  '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+  '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.'
+};
+const LETTERS = Object.keys(MORSE);
+const DOT_DURATION = 80; // ms
+
+function formatMorse(code) {
+  return code.split('').map(c => c === '.' ? '•' : '—').join(' ');
+}
+
+// ========== AUDIO ==========
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playBeep(duration) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 700;
+  gain.gain.setValueAtTime(0.5, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + duration / 1000);
+}
+
+function playMorse(code) {
+  let delay = 0;
+  for (const ch of code) {
+    const dur = ch === '.' ? DOT_DURATION : DOT_DURATION * 3;
+    setTimeout(() => playBeep(dur), delay);
+    delay += dur + DOT_DURATION;
+  }
+}
+
+// ========== TABS ==========
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ========== CHART ==========
+const chartGrid = document.getElementById('chartGrid');
+for (const [letter, code] of Object.entries(MORSE)) {
+  const div = document.createElement('div');
+  div.className = 'chart-item';
+  div.innerHTML = `<div class="letter">${letter}</div><div class="code">${formatMorse(code)}</div>`;
+  div.addEventListener('click', () => {
+    playMorse(code);
+    const display = document.querySelector('#panel-chart .chart-item.active-item');
+    if (display) display.classList.remove('active-item');
+    div.style.background = '#b7e4c7';
+    setTimeout(() => div.style.background = '', 1000);
+  });
+  chartGrid.appendChild(div);
+}
+
+// ========== QUIZ STATE ==========
+let quizState = {
+  currentLetter: '',
+  options: [],
+  answered: false,
+  correct: 0,
+  total: 0
+};
+
+function getRandomLetters(exclude, count = 4) {
+  const available = LETTERS.filter(l => l !== exclude);
+  const result = [];
+  for (let i = 0; i < count - 1 && available.length > 0; i++) {
+    const idx = Math.floor(Math.random() * available.length);
+    result.push(available.splice(idx, 1)[0]);
+  }
+  result.push(exclude);
+  return result.sort(() => Math.random() - 0.5);
+}
+
+function newQuiz() {
+  quizState.answered = false;
+  quizState.currentLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+  quizState.options = getRandomLetters(quizState.currentLetter, 4);
+
+  document.getElementById('quizMorse').textContent = formatMorse(MORSE[quizState.currentLetter]);
+  document.getElementById('quizResult').textContent = '';
+  document.getElementById('quizResult').className = 'result-msg';
+
+  const container = document.getElementById('letterOptions');
+  container.innerHTML = '';
+  quizState.options.forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className = 'letter-opt';
+    btn.textContent = letter;
+    btn.addEventListener('click', () => handleQuizAnswer(letter, btn));
+    container.appendChild(btn);
+  });
+}
+
+function handleQuizAnswer(letter, btn) {
+  if (quizState.answered) return;
+  quizState.answered = true;
+  quizState.total++;
+
+  if (letter === quizState.currentLetter) {
+    quizState.correct++;
+    btn.classList.add('correct');
+    document.getElementById('quizResult').textContent = '✅ Benar!';
+    document.getElementById('quizResult').className = 'result-msg correct';
+    document.getElementById('scoreCorrect').textContent = quizState.correct;
+    if (getPlayer()) submitGameScore('morse', getPlayer(), quizState.correct + inputState.correct);
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('quizResult').textContent = `❌ Salah! Jawaban: ${quizState.currentLetter}`;
+    document.getElementById('quizResult').className = 'result-msg wrong';
+    // highlight correct answer
+    document.querySelectorAll('.letter-opt').forEach(el => {
+      if (el.textContent === quizState.currentLetter) el.classList.add('correct');
+    });
+  }
+  document.getElementById('scoreTotal').textContent = quizState.total;
+}
+
+document.getElementById('playSoundBtn').addEventListener('click', () => {
+  if (!quizState.currentLetter) return;
+  playMorse(MORSE[quizState.currentLetter]);
+});
+
+document.getElementById('nextQuizBtn').addEventListener('click', newQuiz);
+
+// ========== INPUT STATE ==========
+let inputState = {
+  currentLetter: '',
+  input: [],
+  correct: 0,
+  total: 0,
+  answered: false
+};
+
+function setInputEnabled(enabled) {
+  document.getElementById('dotBtn').disabled = !enabled;
+  document.getElementById('dashBtn').disabled = !enabled;
+  document.getElementById('clearBtn').disabled = !enabled;
+  document.getElementById('checkInputBtn').disabled = !enabled;
+}
+
+function newInput() {
+  inputState.currentLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+  inputState.input = [];
+  inputState.answered = false;
+  document.getElementById('targetLetter').textContent = inputState.currentLetter;
+  document.getElementById('inputDisplay').textContent = '';
+  document.getElementById('inputResult').textContent = '';
+  document.getElementById('inputResult').className = 'result-msg';
+  setInputEnabled(true);
+}
+
+document.getElementById('dotBtn').addEventListener('click', () => {
+  if (inputState.answered || inputState.input.length >= 10) return;
+  inputState.input.push('.');
+  document.getElementById('inputDisplay').textContent = inputState.input.map(c => c === '.' ? '•' : '—').join(' ');
+});
+
+document.getElementById('dashBtn').addEventListener('click', () => {
+  if (inputState.answered || inputState.input.length >= 10) return;
+  inputState.input.push('-');
+  document.getElementById('inputDisplay').textContent = inputState.input.map(c => c === '.' ? '•' : '—').join(' ');
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (inputState.answered) return;
+  inputState.input = [];
+  document.getElementById('inputDisplay').textContent = '';
+  document.getElementById('inputResult').textContent = '';
+  document.getElementById('inputResult').className = 'result-msg';
+});
+
+document.getElementById('checkInputBtn').addEventListener('click', () => {
+  const inputCode = inputState.input.join('');
+  const targetCode = MORSE[inputState.currentLetter];
+  const resultEl = document.getElementById('inputResult');
+
+  if (inputState.answered) return;
+  if (inputCode === '') {
+    resultEl.textContent = '⚠️ Ketik morse dulu!';
+    resultEl.className = 'result-msg wrong';
+    return;
+  }
+
+  inputState.answered = true;
+  setInputEnabled(false);
+  inputState.total++;
+  if (inputCode === targetCode) {
+    inputState.correct++;
+    resultEl.textContent = '✅ Benar!';
+    resultEl.className = 'result-msg correct';
+  } else {
+    resultEl.textContent = `❌ Salah! Jawaban: ${formatMorse(targetCode)}`;
+    resultEl.className = 'result-msg wrong';
+  }
+  document.getElementById('inputScoreCorrect').textContent = inputState.correct;
+  document.getElementById('inputScoreTotal').textContent = inputState.total;
+  if (inputCode === targetCode && getPlayer()) {
+    submitGameScore('morse', getPlayer(), quizState.correct + inputState.correct);
+  }
+});
+
+document.getElementById('nextInputBtn').addEventListener('click', newInput);
+
+// ========== SEMAPHORE STATE ==========
+let semaState = {
+  currentLetter: '',
+  options: [],
+  answered: false,
+  correct: 0,
+  total: 0
+};
+
+function newSema() {
+  semaState.answered = false;
+  semaState.currentLetter = SEMA_LETTERS[Math.floor(Math.random() * SEMA_LETTERS.length)];
+  semaState.options = getRandomLetters(semaState.currentLetter, 4);
+
+  const [p1, p2] = SEMAPHORE[semaState.currentLetter];
+  drawSemaphore(p1, p2, false);
+
+  document.getElementById('semaResult').textContent = '';
+  document.getElementById('semaResult').className = 'result-msg';
+
+  const container = document.getElementById('semaOptions');
+  container.innerHTML = '';
+  semaState.options.forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className = 'letter-opt';
+    btn.textContent = letter;
+    btn.addEventListener('click', () => {
+      if (semaState.answered) return;
+      semaState.answered = true;
+      semaState.total++;
+
+      const [sp1, sp2] = SEMAPHORE[semaState.currentLetter];
+      drawSemaphore(sp1, sp2, true);
+
+      if (letter === semaState.currentLetter) {
+        semaState.correct++;
+        btn.classList.add('correct');
+        document.getElementById('semaResult').textContent = '✅ Benar!';
+        document.getElementById('semaResult').className = 'result-msg correct';
+        document.getElementById('semaScoreCorrect').textContent = semaState.correct;
+        if (getPlayer()) submitGameScore('semaphore', getPlayer(), semaState.correct);
+      } else {
+        btn.classList.add('wrong');
+        document.getElementById('semaResult').textContent = '❌ Salah! Jawaban: ' + semaState.currentLetter;
+        document.getElementById('semaResult').className = 'result-msg wrong';
+        document.querySelectorAll('#semaOptions .letter-opt').forEach(el => {
+          if (el.textContent === semaState.currentLetter) el.classList.add('correct');
+        });
+      }
+      document.getElementById('semaScoreTotal').textContent = semaState.total;
+    });
+    container.appendChild(btn);
+  });
+}
+
+document.getElementById('nextSemaBtn').addEventListener('click', newSema);
+
+// Semaphore sub-tabs
+document.querySelectorAll('.sema-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sema-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sema-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('sema-' + tab.dataset.sema).classList.add('active');
+  });
+});
+
+// Semaphore chart
+function drawMiniSema(canvas, pos1, pos2) {
+  const ctx = canvas.getContext('2d');
+  const cx = 30, cy = 30;
+  const r = 22;
+  canvas.width = 60;
+  canvas.height = 60;
+
+  ctx.clearRect(0, 0, 60, 60);
+
+  // body
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a472a';
+  ctx.fill();
+
+  const arms = [
+    { pos: pos1, color: '#2d6a4f' },
+    { pos: pos2, color: '#52b788' }
+  ];
+
+  for (const arm of arms) {
+    const a = SEMA_ANGLES[arm.pos - 1];
+    const ex = cx + Math.cos(a) * r;
+    const ey = cy + Math.sin(a) * r;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = arm.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // flag
+    const fx = cx + Math.cos(a) * (r + 4);
+    const fy = cy + Math.sin(a) * (r + 4);
+    const perpA = a + Math.PI / 2;
+    const halfW = 6;
+    ctx.beginPath();
+    ctx.moveTo(ex + Math.cos(perpA) * halfW, ey + Math.sin(perpA) * halfW);
+    ctx.lineTo(ex - Math.cos(perpA) * halfW, ey - Math.sin(perpA) * halfW);
+    ctx.lineTo(fx - Math.cos(perpA) * halfW, fy - Math.sin(perpA) * halfW);
+    ctx.lineTo(fx + Math.cos(perpA) * halfW, fy + Math.sin(perpA) * halfW);
+    ctx.closePath();
+    ctx.fillStyle = arm.color;
+    ctx.fill();
+  }
+}
+
+const semaChartGrid = document.getElementById('semaChartGrid');
+for (const [letter, [p1, p2]] of Object.entries(SEMAPHORE)) {
+  const div = document.createElement('div');
+  div.className = 'sema-chart-item';
+  const miniCanvas = document.createElement('canvas');
+  miniCanvas.width = 60;
+  miniCanvas.height = 60;
+  drawMiniSema(miniCanvas, p1, p2);
+  div.innerHTML = `<div class="letter">${letter}</div>`;
+  div.insertBefore(miniCanvas, div.firstChild);
+  const label = document.createElement('div');
+  label.className = 'pos-label';
+  label.textContent = `${p1}-${p2}`;
+  div.appendChild(label);
+  div.addEventListener('click', () => {
+    drawSemaphore(p1, p2, false);
+    document.querySelector('.sema-tab[data-sema="quiz"]').click();
+  });
+  semaChartGrid.appendChild(div);
+}
+
+// ========== PLAYER & LEADERBOARD ==========
+const API_BASE = window.location.origin;
+
+function getPlayer() { return localStorage.getItem('morsePlayer') || ''; }
+function setPlayer(name) { localStorage.setItem('morsePlayer', name); }
+
+function getGameScores(game) {
+  const key = game + 'Scores';
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+  catch { return []; }
+}
+
+function saveGameScores(game, scores) {
+  localStorage.setItem(game + 'Scores', JSON.stringify(scores));
+}
+
+function submitGameScore(game, name, score) {
+  const scores = getGameScores(game);
+  const existing = scores.find(s => s.name === name);
+  if (existing) existing.score = Math.max(existing.score, score);
+  else scores.push({ name, score });
+  scores.sort((a, b) => b.score - a.score);
+  saveGameScores(game, scores);
+
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, score, game })
+  }).catch(() => {});
+}
+
+function renderLeaderboardBody(bodyId, scores) {
+  const body = document.getElementById(bodyId);
+  body.innerHTML = '';
+  if (!scores || scores.length === 0) {
+    body.innerHTML = '<div class="lb-empty">Belum ada skor.</div>';
+    return;
+  }
+  scores.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    let rc = '';
+    if (i === 0) rc = 'gold';
+    else if (i === 1) rc = 'silver';
+    else if (i === 2) rc = 'bronze';
+    row.innerHTML = `<div class="rank ${rc}">${i + 1}</div><div class="name">${s.name}</div><div class="score">${s.score}${bodyId === 'lbCcBody' ? '/25' : ''}</div>`;
+    body.appendChild(row);
+  });
+}
+
+function loadLeaderboard() {
+  renderLeaderboardBody('lbMorseBody', getGameScores('morse'));
+  renderLeaderboardBody('lbSemaBody', getGameScores('semaphore'));
+  renderLeaderboardBody('lbCcBody', getGameScores('cc'));
+
+  // Try API for each game
+  ['morse', 'semaphore', 'cc'].forEach(game => {
+    fetch(API_BASE + '/api/score?game=' + game)
+      .then(r => r.json())
+      .then(data => {
+        const bodyId = game === 'cc' ? 'lbCcBody' : game === 'semaphore' ? 'lbSemaBody' : 'lbMorseBody';
+        if (data && data.length) renderLeaderboardBody(bodyId, data);
+      })
+      .catch(() => {});
+  });
+}
+
+function showNameModal() {
+  document.getElementById('nameModal').classList.add('show');
+  document.getElementById('nameInput').value = '';
+  document.getElementById('nameInput').focus();
+}
+
+function hideNameModal() {
+  document.getElementById('nameModal').classList.remove('show');
+}
+
+document.getElementById('nameSubmitBtn').addEventListener('click', () => {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { document.getElementById('nameInput').focus(); return; }
+  setPlayer(name);
+  hideNameModal();
+  document.getElementById('playerBar').style.display = 'flex';
+  document.getElementById('playerNameDisplay').textContent = name;
+});
+
+document.getElementById('nameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('nameSubmitBtn').click();
+});
+
+document.getElementById('changeNameBtn').addEventListener('click', showNameModal);
+document.getElementById('refreshLbBtn').addEventListener('click', loadLeaderboard);
+
+// Leaderboard sub-tabs
+document.querySelectorAll('.lb-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.lb-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('lb-' + tab.dataset.lb).classList.add('active');
+  });
+});
+
+// ========== CERDAS CERMAT ==========
+const CC_TIME = 40 * 60; // 40 menit dalam detik
+const CC_TOTAL = 25;
+const CC_LABELS = ['A', 'B', 'C', 'D'];
+
+const CC_QUESTIONS = [
+  {
+    q: 'Siapakah yang dikenal sebagai Bapak Pandu Sedunia (Bapak Pramuka Dunia)?',
+    o: ['Robert Baden-Powell', 'Lord Boden-Powell', 'Sir Robert Stephenson Smyth Baden-Powell', 'Jenderal Baden-Powell'],
+    a: 2
+  },
+  {
+    q: 'Apa nama buku yang ditulis oleh Baden-Powell yang menjadi dasar gerakan kepanduan?',
+    o: ['Aids to Scouting', 'Scouting for Boys', 'Scouting and Guiding', 'Boy Scout Handbook'],
+    a: 1
+  },
+  {
+    q: 'Pada tanggal berapa gerakan Pramuka diperkenalkan di Indonesia?',
+    o: ['20 Mei 1961', '14 Agustus 1961', '28 Oktober 1961', '1 Juni 1961'],
+    a: 1
+  },
+  {
+    q: 'Apa kepanjangan dari PRAMUKA?',
+    o: ['Praja Muda Karana', 'Pramuka Muda Karana', 'Praja Muda Karya', 'Pramudya Karana'],
+    a: 0
+  },
+  {
+    q: 'Apa lambang gerakan Pramuka Indonesia?',
+    o: ['Tunas Kelapa', 'Bunga Teratai', 'Pohon Beringin', 'Siaga'],
+    a: 0
+  },
+  {
+    q: 'Siapa yang menciptakan lambang gerakan Pramuka?',
+    o: ['Sri Sultan Hamengkubuwono IX', 'Soenardjo Atmodipoero', 'Ir. Soekarno', 'Dr. Radjiman Wedyodiningrat'],
+    a: 1
+  },
+  {
+    q: 'Tingkatan Pramuka untuk usia 7-10 tahun disebut?',
+    o: ['Penggalang', 'Penegak', 'Siaga', 'Pandega'],
+    a: 2
+  },
+  {
+    q: 'Tingkatan Pramuka untuk usia 11-15 tahun disebut?',
+    o: ['Siaga', 'Penegak', 'Pandega', 'Penggalang'],
+    a: 3
+  },
+  {
+    q: 'Tingkatan Pramuka untuk usia 16-20 tahun disebut?',
+    o: ['Penggalang', 'Pandega', 'Penegak', 'Siaga'],
+    a: 2
+  },
+  {
+    q: 'Ada berapa butir Dasa Darma Pramuka?',
+    o: ['8', '9', '10', '11'],
+    a: 2
+  },
+  {
+    q: 'Apa bunyi Dasa Darma yang pertama?',
+    o: ['Cinta alam dan kasih sayang sesama manusia', 'Takwa kepada Tuhan Yang Maha Esa', 'Patuh dan suka bermusyawarah', 'Disiplin, berani, dan setia'],
+    a: 1
+  },
+  {
+    q: 'Tri Satya Pramuka terdiri dari berapa butir?',
+    o: ['2', '3', '4', '5'],
+    a: 1
+  },
+  {
+    q: 'Apa nama pertemuan besar Pramuka tingkat dunia?',
+    o: ['Perkemahan', 'Jambore', 'Raimuna', 'Lomba Tingkat'],
+    a: 1
+  },
+  {
+    q: 'Di negara mana Jambore Dunia pertama kali diadakan pada tahun 1920?',
+    o: ['Amerika Serikat', 'Perancis', 'Inggris (Olympia, London)', 'Belanda'],
+    a: 2
+  },
+  {
+    q: 'Apa warna dasar Tanda Kecakapan Khusus (TKK)?',
+    o: ['Biru', 'Merah', 'Hijau', 'Kuning'],
+    a: 1
+  },
+  {
+    q: 'Apa kepanjangan dari TKK dalam Pramuka?',
+    o: ['Tanda Kecakapan Kepramukaan', 'Tanda Keterampilan Khusus', 'Tanda Kecakapan Khusus', 'Tingkat Kecakapan Karya'],
+    a: 2
+  },
+  {
+    q: 'Simpul apa yang digunakan untuk mengikat tali pada tiang atau palang?',
+    o: ['Simpul mati', 'Simpul pangkal', 'Simpul anyam', 'Simpul tiang'],
+    a: 1
+  },
+  {
+    q: 'Apa warna bendera Gerakan Pramuka Indonesia?',
+    o: ['Merah dan putih', 'Coklat dan hijau', 'Kuning dan coklat', 'Hijau dan putih'],
+    a: 1
+  },
+  {
+    q: 'Berapa jumlah anggota ideal dalam satu regu Pramuka Penggalang?',
+    o: ['3-5 orang', '5-10 orang', '8-12 orang', '10-15 orang'],
+    a: 1
+  },
+  {
+    q: 'Apa nama kegiatan perkemahan Pramuka?',
+    o: ['Persari', 'Perkemahan', 'Jambore', 'Semua benar'],
+    a: 3
+  },
+  {
+    q: 'Apa nama satuan terkecil dalam Pramuka Siaga?',
+    o: ['Regu', 'Barung', 'Sangga', 'Kwartir'],
+    a: 1
+  },
+  {
+    q: 'Apa yang dimaksud dengan pionering dalam Pramuka?',
+    o: ['Memasak di alam', 'Membuat bangunan dari tongkat dan tali', 'Bernyanyi bersama', 'Mendirikan tenda'],
+    a: 1
+  },
+  {
+    q: 'Apa nama lagu Mars Pramuka?',
+    o: ['Pramuka Sejati', 'Mars Pramuka (Kami Pramuka Indonesia)', 'Hymne Pramuka', 'Pramuka Indonesia'],
+    a: 1
+  },
+  {
+    q: 'Siapa tokoh Pramuka Indonesia yang juga menjabat sebagai Wakil Presiden RI?',
+    o: ['Sri Sultan Hamengkubuwono IX', 'B.J. Habibie', 'Jenderal Soedirman', 'Mohammad Hatta'],
+    a: 0
+  },
+  {
+    q: 'Apa kode kehormatan untuk Pramuka Siaga?',
+    o: ['Dasa Darma dan Tri Satya', 'Dwi Darma dan Dwi Satya', 'Tri Satya dan Dasa Darma', 'Catur Darma'],
+    a: 1
+  }
+];
+
+let ccState = {
+  name: '',
+  current: 0,
+  score: 0,
+  answered: false,
+  finished: false,
+  timer: CC_TIME,
+  interval: null
+};
+
+function ccReset() {
+  if (ccState.interval) clearInterval(ccState.interval);
+  ccState.current = 0;
+  ccState.score = 0;
+  ccState.answered = false;
+  ccState.finished = false;
+  ccState.timer = CC_TIME;
+  ccState.interval = null;
+  document.getElementById('ccSetup').style.display = 'block';
+  document.getElementById('ccQuiz').style.display = 'none';
+  document.getElementById('ccResultScreen').style.display = 'none';
+  document.getElementById('ccTimer').classList.remove('warning');
+}
+
+function ccFormatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `⏱ ${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+function ccStartTimer() {
+  ccState.timer = CC_TIME;
+  document.getElementById('ccTimer').textContent = ccFormatTime(ccState.timer);
+  if (ccState.interval) clearInterval(ccState.interval);
+  ccState.interval = setInterval(() => {
+    ccState.timer--;
+    document.getElementById('ccTimer').textContent = ccFormatTime(ccState.timer);
+    if (ccState.timer <= 300) document.getElementById('ccTimer').classList.add('warning');
+    if (ccState.timer <= 0) {
+      clearInterval(ccState.interval);
+      ccState.interval = null;
+      ccFinish();
+    }
+  }, 1000);
+}
+
+function ccShowQuestion() {
+  const data = CC_QUESTIONS[ccState.current];
+  document.getElementById('ccCurrent').textContent = ccState.current + 1;
+  document.getElementById('ccQuestion').textContent = data.q;
+  document.getElementById('ccResult').textContent = '';
+  document.getElementById('ccResult').className = 'result-msg';
+  document.getElementById('ccNextBtn').style.display = 'none';
+  document.getElementById('ccFinishBtn').style.display = 'none';
+  ccState.answered = false;
+
+  const container = document.getElementById('ccOptions');
+  container.innerHTML = '';
+  data.o.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cc-opt';
+    btn.innerHTML = `<span class="label">${CC_LABELS[i]}</span> ${opt}`;
+    btn.addEventListener('click', () => ccAnswer(i, btn));
+    container.appendChild(btn);
+  });
+}
+
+function ccAnswer(idx, btn) {
+  if (ccState.answered) return;
+  ccState.answered = true;
+  const data = CC_QUESTIONS[ccState.current];
+  const allBtns = document.querySelectorAll('#ccOptions .cc-opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  if (idx === data.a) {
+    ccState.score++;
+    btn.classList.add('correct');
+    document.getElementById('ccResult').textContent = '✅ Benar!';
+    document.getElementById('ccResult').className = 'result-msg correct';
+  } else {
+    btn.classList.add('wrong');
+    allBtns[data.a].classList.add('correct');
+    document.getElementById('ccResult').textContent = `❌ Salah! Jawaban: ${CC_LABELS[data.a]}`;
+    document.getElementById('ccResult').className = 'result-msg wrong';
+  }
+
+  if (ccState.current < CC_TOTAL - 1) {
+    document.getElementById('ccNextBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('ccFinishBtn').style.display = 'inline-block';
+  }
+}
+
+function ccNext() {
+  if (ccState.current < CC_TOTAL - 1) {
+    ccState.current++;
+    ccShowQuestion();
+  }
+}
+
+function ccFinish() {
+  if (ccState.interval) clearInterval(ccState.interval);
+  ccState.interval = null;
+  ccState.finished = true;
+  document.getElementById('ccQuiz').style.display = 'none';
+  document.getElementById('ccResultScreen').style.display = 'block';
+  document.getElementById('ccFinalScore').textContent = ccState.score;
+
+  let msg = '';
+  if (ccState.score === 25) msg = '🎉 Sempurna! Nilai 100! Luar biasa!';
+  else if (ccState.score >= 20) msg = '🏆 Hebat! Kamu pramuka sejati!';
+  else if (ccState.score >= 15) msg = '👍 Bagus! Terus belajar ya!';
+  else if (ccState.score >= 10) msg = '📚 Lumayan, tingkatkan lagi belajarnya!';
+  else msg = '💪 Semangat! Coba lagi ya!';
+  document.getElementById('ccFinalMsg').textContent = msg;
+
+  // Simpan skor
+  if (ccState.name) submitGameScore('cc', ccState.name, ccState.score);
+}
+
+document.getElementById('ccStartBtn').addEventListener('click', () => {
+  const name = getPlayer();
+  if (!name) { showNameModal(); return; }
+  ccState.name = name;
+  ccReset();
+  document.getElementById('ccSetup').style.display = 'none';
+  document.getElementById('ccQuiz').style.display = 'block';
+  ccStartTimer();
+  ccShowQuestion();
+});
+
+document.getElementById('ccNextBtn').addEventListener('click', ccNext);
+document.getElementById('ccFinishBtn').addEventListener('click', ccFinish);
+document.getElementById('ccResetBtn').addEventListener('click', ccReset);
+
+// ========== ADMIN ==========
+document.getElementById('adminLink').addEventListener('click', () => {
+  document.getElementById('adminModal').classList.add('show');
+  document.getElementById('adminPassInput').value = '';
+  document.getElementById('adminPassError').style.display = 'none';
+  document.getElementById('adminPassInput').focus();
+});
+
+document.getElementById('adminCancelBtn').addEventListener('click', () => {
+  document.getElementById('adminModal').classList.remove('show');
+});
+
+document.getElementById('adminLoginBtn').addEventListener('click', adminLogin);
+document.getElementById('adminPassInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') adminLogin();
+});
+
+document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+  document.getElementById('adminDashModal').classList.remove('show');
+});
+
+function adminLogin() {
+  const pass = document.getElementById('adminPassInput').value.trim();
+  if (!pass) return;
+  document.getElementById('adminLoginBtn').disabled = true;
+
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'list', password: pass })
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('adminLoginBtn').disabled = false;
+    if (data.error) {
+      document.getElementById('adminPassError').style.display = 'block';
+      return;
+    }
+    document.getElementById('adminModal').classList.remove('show');
+    document.getElementById('adminDashModal').classList.add('show');
+    renderAdminDashboard(data, pass);
+  })
+  .catch(() => {
+    document.getElementById('adminLoginBtn').disabled = false;
+    document.getElementById('adminPassError').style.display = 'block';
+  });
+}
+
+function renderAdminDashboard(data, pass) {
+  const div = document.getElementById('adminDashboard');
+  let html = '';
+
+  const games = [
+    { key: 'morse', label: '🎯 Morse (Tebak + Ketik)' },
+    { key: 'semaphore', label: '🚩 Semaphore' },
+    { key: 'cc', label: '🧠 Cerdas Cermat' }
+  ];
+
+  for (const g of games) {
+    const items = data[g.key] || [];
+    html += `<div class="admin-section"><h4>${g.label} (${items.length})</h4>`;
+    if (items.length === 0) {
+      html += '<p style="color:#999;font-size:13px;">Tidak ada data.</p>';
+    } else {
+      html += `<table class="admin-table">
+        <tr><th>#</th><th>Nama</th><th>Skor</th><th class="actions">Aksi</th></tr>`;
+      items.forEach((item, i) => {
+        const id = `admin-${g.key}-${i}`;
+        html += `<tr id="${id}">
+          <td>${i + 1}</td>
+          <td><input type="text" id="${id}-name" value="${item.name}" class="admin-name-input"></td>
+          <td><input type="number" id="${id}-score" value="${item.score}" class="admin-score-input" min="0"></td>
+          <td class="actions">
+            <button onclick="adminSave('${g.key}','${item.name}',${i})">💾 Simpan</button>
+            <button class="danger" onclick="adminDelete('${g.key}','${item.name}')">🗑 Hapus</button>
+          </td>
+        </tr>`;
+      });
+      html += '</table>';
+    }
+    html += '</div>';
+  }
+
+  html += '<p style="text-align:center;color:#999;font-size:11px;margin-top:8px;">Data lokal (browser ini) + data dari server.</p>';
+  div.innerHTML = html;
+  window._adminPass = pass;
+}
+
+function adminSave(game, oldName, idx) {
+  const id = `admin-${game}-${idx}`;
+  const newName = document.getElementById(`${id}-name`).value.trim();
+  const score = parseInt(document.getElementById(`${id}-score`).value);
+  if (!newName || isNaN(score)) return;
+
+  // Update localStorage
+  const localKey = game + 'Scores';
+  const local = JSON.parse(localStorage.getItem(localKey) || '[]');
+  const entry = local.find(s => s.name === oldName);
+  if (entry) {
+    if (newName !== oldName) entry.name = newName;
+    entry.score = score;
+    localStorage.setItem(localKey, JSON.stringify(local));
+  }
+
+  // Update API
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update', password: window._adminPass, game, name: oldName, newName, score })
+  }).catch(() => {});
+
+  // Re-fetch dashboard
+  setTimeout(() => adminRefresh(), 300);
+}
+
+function adminDelete(game, name) {
+  if (!confirm(`Hapus "${name}"?`)) return;
+
+  // Delete from localStorage
+  const localKey = game + 'Scores';
+  const local = JSON.parse(localStorage.getItem(localKey) || '[]');
+  const filtered = local.filter(s => s.name !== name);
+  localStorage.setItem(localKey, JSON.stringify(filtered));
+
+  // Delete from API
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete', password: window._adminPass, game, name })
+  }).catch(() => {});
+
+  setTimeout(() => adminRefresh(), 300);
+}
+
+function adminRefresh() {
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'list', password: window._adminPass })
+  })
+  .then(r => r.json())
+  .then(data => { if (!data.error) renderAdminDashboard(data, window._adminPass); })
+  .catch(() => {});
+}
+
+// ========== INIT ==========
+const savedName = getPlayer();
+if (savedName) {
+  document.getElementById('playerBar').style.display = 'flex';
+  document.getElementById('playerNameDisplay').textContent = savedName;
+}
+newQuiz();
+newInput();
+newSema();
+loadLeaderboard();
+if (!savedName) showNameModal();
+</script>
+</body>
+</html>
