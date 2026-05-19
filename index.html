@@ -429,10 +429,6 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
 
 .admin-panel { display: none; }
 .admin-panel.show { display: block; }
-.admin-link:hover { color: #999; }
-
-.admin-panel { display: none; }
-.admin-panel.show { display: block; }
 
 .admin-table {
   width: 100%;
@@ -833,6 +829,17 @@ function getRandomLetters(exclude, count = 4) {
   return result.sort(() => Math.random() - 0.5);
 }
 
+function getSemaLetters(exclude, count = 4) {
+  const available = SEMA_LETTERS.filter(l => l !== exclude);
+  const result = [];
+  for (let i = 0; i < count - 1 && available.length > 0; i++) {
+    const idx = Math.floor(Math.random() * available.length);
+    result.push(available.splice(idx, 1)[0]);
+  }
+  result.push(exclude);
+  return result.sort(() => Math.random() - 0.5);
+}
+
 function newQuiz() {
   quizState.answered = false;
   quizState.currentLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
@@ -963,6 +970,78 @@ document.getElementById('checkInputBtn').addEventListener('click', () => {
 
 document.getElementById('nextInputBtn').addEventListener('click', newInput);
 
+// ========== SEMAPHORE DATA ==========
+// Position 1=12:00, 2=1:30, 3=3:00, 4=4:30, 5=6:00, 6=7:30, 7=9:00, 8=10:30
+const SEMA_ANGLES = [
+  -Math.PI / 2,  // 1: 12:00
+  -Math.PI / 4,  // 2: 1:30
+  0,             // 3: 3:00
+  Math.PI / 4,   // 4: 4:30
+  Math.PI / 2,   // 5: 6:00
+  3 * Math.PI / 4, // 6: 7:30
+  Math.PI,       // 7: 9:00
+  -3 * Math.PI / 4 // 8: 10:30
+];
+
+const SEMAPHORE = {
+  'A': [1, 2], 'B': [1, 3], 'C': [1, 4], 'D': [1, 5], 'E': [1, 6],
+  'F': [1, 7], 'G': [1, 8], 'H': [2, 3], 'I': [2, 4], 'J': [2, 5],
+  'K': [2, 6], 'L': [2, 7], 'M': [2, 8], 'N': [3, 4], 'O': [3, 5],
+  'P': [3, 6], 'Q': [3, 7], 'R': [3, 8], 'S': [4, 5], 'T': [4, 6],
+  'U': [4, 7], 'V': [4, 8], 'W': [5, 6], 'X': [5, 7], 'Y': [5, 8],
+  'Z': [6, 7]
+};
+const SEMA_LETTERS = Object.keys(SEMAPHORE);
+
+function drawSemaphore(pos1, pos2, highlight) {
+  const canvas = document.getElementById('semaCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 110, cy = 110;
+  const bodyR = 10, armLen = 75;
+  const w = canvas.width, h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Body
+  ctx.beginPath();
+  ctx.arc(cx, cy, bodyR, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a472a';
+  ctx.fill();
+
+  const arms = [
+    { pos: pos1, color: highlight ? '#e63946' : '#2d6a4f' },
+    { pos: pos2, color: highlight ? '#e63946' : '#52b788' }
+  ];
+
+  for (const arm of arms) {
+    const a = SEMA_ANGLES[arm.pos - 1];
+    const ex = cx + Math.cos(a) * armLen;
+    const ey = cy + Math.sin(a) * armLen;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = arm.color;
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Flag
+    const perpA = a + Math.PI / 2;
+    const halfW = 14;
+    const tipX = cx + Math.cos(a) * (armLen + 18);
+    const tipY = cy + Math.sin(a) * (armLen + 18);
+    ctx.beginPath();
+    ctx.moveTo(ex + Math.cos(perpA) * halfW, ey + Math.sin(perpA) * halfW);
+    ctx.lineTo(ex - Math.cos(perpA) * halfW, ey - Math.sin(perpA) * halfW);
+    ctx.lineTo(tipX - Math.cos(perpA) * halfW, tipY - Math.sin(perpA) * halfW);
+    ctx.lineTo(tipX + Math.cos(perpA) * halfW, tipY + Math.sin(perpA) * halfW);
+    ctx.closePath();
+    ctx.fillStyle = arm.color;
+    ctx.fill();
+  }
+}
+
 // ========== SEMAPHORE STATE ==========
 let semaState = {
   currentLetter: '',
@@ -975,7 +1054,7 @@ let semaState = {
 function newSema() {
   semaState.answered = false;
   semaState.currentLetter = SEMA_LETTERS[Math.floor(Math.random() * SEMA_LETTERS.length)];
-  semaState.options = getRandomLetters(semaState.currentLetter, 4);
+  semaState.options = getSemaLetters(semaState.currentLetter, 4);
 
   const [p1, p2] = SEMAPHORE[semaState.currentLetter];
   drawSemaphore(p1, p2, false);
@@ -1514,7 +1593,8 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.admin-game-section').forEach(s => s.classList.remove('active'));
     e.target.classList.add('active');
-    const sectionId = 'admin-' + e.target.dataset.admin;
+    adminActiveTab = e.target.dataset.admin;
+    const sectionId = 'admin-' + adminActiveTab;
     const section = document.getElementById(sectionId);
     if (section) section.classList.add('active');
   }
@@ -1590,7 +1670,7 @@ function renderAdminContent() {
 }
 
 function escHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
 
 function adminSave(game, oldName, idx) {
