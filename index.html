@@ -386,6 +386,38 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
 .lb-section { display: none; }
 .lb-section.active { display: block; }
 
+.admin-tab {
+  flex: 1;
+  padding: 8px;
+  border: 2px solid #2d6a4f;
+  background: transparent;
+  color: #2d6a4f;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.admin-tab:hover { background: #d8f3dc; }
+.admin-tab.active { background: #2d6a4f; color: #fff; }
+.admin-game-section { display: none; }
+.admin-game-section.active { display: block; }
+
+.admin-action-btn {
+  padding: 4px 12px;
+  border: 1px solid #2d6a4f;
+  border-radius: 4px;
+  background: #fff;
+  color: #2d6a4f;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 0 2px;
+  transition: 0.15s;
+}
+.admin-action-btn:hover { background: #d8f3dc; }
+.admin-action-btn.danger { border-color: #e63946; color: #e63946; }
+.admin-action-btn.danger:hover { background: #ffe5e5; }
+
 /* Admin */
 .admin-link {
   cursor: pointer;
@@ -393,6 +425,10 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
   font-size: 11px;
   text-decoration: none;
 }
+.admin-link:hover { color: #999; }
+
+.admin-panel { display: none; }
+.admin-panel.show { display: block; }
 .admin-link:hover { color: #999; }
 
 .admin-panel { display: none; }
@@ -408,32 +444,24 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
   text-align: left;
   border-bottom: 1px solid #e8f5e9;
 }
-.admin-table th {
+.admin-table thead th {
   background: #d8f3dc;
   color: #1a472a;
   font-weight: bold;
+  position: sticky;
+  top: 0;
 }
-.admin-table tr:hover td { background: #f0fdf4; }
-.admin-table .actions { white-space: nowrap; }
-.admin-table .actions button {
-  padding: 3px 10px;
-  border: 1px solid #2d6a4f;
-  border-radius: 4px;
-  background: #fff;
-  color: #2d6a4f;
-  cursor: pointer;
-  font-size: 11px;
-  margin: 0 2px;
-}
-.admin-table .actions button:hover { background: #d8f3dc; }
-.admin-table .actions button.danger { border-color: #e63946; color: #e63946; }
-.admin-table .actions button.danger:hover { background: #ffe5e5; }
+.admin-table tbody tr:hover { background: #f0fdf4; }
 .admin-table input {
-  padding: 4px 6px;
+  padding: 4px 8px;
   border: 1px solid #b7e4c7;
   border-radius: 4px;
-  font-size: 12px;
-  width: 80px;
+  font-size: 13px;
+  width: 100%;
+}
+.admin-table input[type="number"] {
+  width: 60px;
+  text-align: center;
 }
 
 .admin-section { margin-bottom: 20px; }
@@ -668,6 +696,9 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
   <div class="modal-box">
     <h2>🏕️ Selamat Datang!</h2>
     <p>Masukkan nama panggilanmu untuk memulai permainan</p>
+    <div class="info-box" style="margin-bottom:12px;font-size:13px;">
+      <p style="margin:0;">💡 <b>Penting:</b> Gunakan nama yang sama setiap kali bermain agar skor kamu tersimpan dan muncul di papan peringkat!</p>
+    </div>
     <input type="text" id="nameInput" placeholder="Nama panggilan..." maxlength="20" autocomplete="off">
     <button class="btn" id="nameSubmitBtn" style="width:100%;">Mulai Bermain</button>
   </div>
@@ -687,12 +718,24 @@ h1 small { display: block; font-size: 14px; color: #666; font-weight: normal; }
 
 <!-- Admin Dashboard -->
 <div class="modal-overlay" id="adminDashModal">
-  <div class="modal-box" style="max-width:650px;max-height:80vh;overflow-y:auto;text-align:left;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+  <div class="modal-box" style="max-width:700px;max-height:85vh;overflow-y:auto;text-align:left;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 style="margin:0;">🔑 Panel Admin</h2>
       <button id="adminLogoutBtn" class="btn ghost" style="padding:6px 16px;font-size:12px;">Keluar</button>
     </div>
-    <div id="adminDashboard">Memuat data...</div>
+
+    <div class="sema-sub-tabs" style="margin-bottom:12px;">
+      <button class="admin-tab active" data-admin="morse">🎯 Morse</button>
+      <button class="admin-tab" data-admin="semaphore">🚩 Semaphore</button>
+      <button class="admin-tab" data-admin="cc">🧠 Cerdas Cermat</button>
+    </div>
+
+    <div id="adminContent"></div>
+
+    <div style="text-align:center;margin-top:12px;">
+      <button id="adminRefreshBtn" class="btn ghost" style="padding:6px 16px;font-size:12px;">↻ Muat Ulang Data</button>
+    </div>
+    <p style="text-align:center;color:#999;font-size:11px;margin-top:8px;">Data dari localStorage + server API</p>
   </div>
 </div>
 
@@ -1430,6 +1473,10 @@ document.getElementById('ccFinishBtn').addEventListener('click', ccFinish);
 document.getElementById('ccResetBtn').addEventListener('click', ccReset);
 
 // ========== ADMIN ==========
+let adminData = {};
+let adminPass = '';
+let adminActiveTab = 'morse';
+
 document.getElementById('adminLink').addEventListener('click', () => {
   document.getElementById('adminModal').classList.add('show');
   document.getElementById('adminPassInput').value = '';
@@ -1450,6 +1497,29 @@ document.getElementById('adminLogoutBtn').addEventListener('click', () => {
   document.getElementById('adminDashModal').classList.remove('show');
 });
 
+document.getElementById('adminRefreshBtn').addEventListener('click', () => {
+  fetch(API_BASE + '/api/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'list', password: adminPass })
+  })
+  .then(r => r.json())
+  .then(data => { if (!data.error) { adminData = data; renderAdminContent(); } })
+  .catch(() => {});
+});
+
+// Admin tab clicks
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('admin-tab')) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-game-section').forEach(s => s.classList.remove('active'));
+    e.target.classList.add('active');
+    const sectionId = 'admin-' + e.target.dataset.admin;
+    const section = document.getElementById(sectionId);
+    if (section) section.classList.add('active');
+  }
+});
+
 function adminLogin() {
   const pass = document.getElementById('adminPassInput').value.trim();
   if (!pass) return;
@@ -1467,9 +1537,11 @@ function adminLogin() {
       document.getElementById('adminPassError').style.display = 'block';
       return;
     }
+    adminPass = pass;
+    adminData = data;
     document.getElementById('adminModal').classList.remove('show');
     document.getElementById('adminDashModal').classList.add('show');
-    renderAdminDashboard(data, pass);
+    renderAdminContent();
   })
   .catch(() => {
     document.getElementById('adminLoginBtn').disabled = false;
@@ -1477,51 +1549,59 @@ function adminLogin() {
   });
 }
 
-function renderAdminDashboard(data, pass) {
-  const div = document.getElementById('adminDashboard');
-  let html = '';
-
+function renderAdminContent() {
+  const container = document.getElementById('adminContent');
   const games = [
-    { key: 'morse', label: '🎯 Morse (Tebak + Ketik)' },
-    { key: 'semaphore', label: '🚩 Semaphore' },
-    { key: 'cc', label: '🧠 Cerdas Cermat' }
+    { key: 'morse', id: 'admin-morse', label: '🎯 Morse (Tebak + Ketik)' },
+    { key: 'semaphore', id: 'admin-semaphore', label: '🚩 Semaphore' },
+    { key: 'cc', id: 'admin-cc', label: '🧠 Cerdas Cermat' }
   ];
 
+  let html = '';
   for (const g of games) {
-    const items = data[g.key] || [];
-    html += `<div class="admin-section"><h4>${g.label} (${items.length})</h4>`;
+    const items = adminData[g.key] || [];
+    const activeClass = g.key === adminActiveTab ? 'active' : '';
+    html += `<div class="admin-game-section ${activeClass}" id="${g.id}">`;
+
     if (items.length === 0) {
-      html += '<p style="color:#999;font-size:13px;">Tidak ada data.</p>';
+      html += `<p style="text-align:center;color:#999;padding:20px;">Belum ada data untuk ${g.label}.</p>`;
     } else {
       html += `<table class="admin-table">
-        <tr><th>#</th><th>Nama</th><th>Skor</th><th class="actions">Aksi</th></tr>`;
+        <thead><tr><th style="width:40px;">#</th><th>Nama</th><th style="width:70px;">Skor</th><th style="width:140px;">Aksi</th></tr></thead>
+        <tbody>`;
       items.forEach((item, i) => {
-        const id = `admin-${g.key}-${i}`;
-        html += `<tr id="${id}">
-          <td>${i + 1}</td>
-          <td><input type="text" id="${id}-name" value="${item.name}" class="admin-name-input"></td>
-          <td><input type="number" id="${id}-score" value="${item.score}" class="admin-score-input" min="0"></td>
-          <td class="actions">
-            <button onclick="adminSave('${g.key}','${item.name}',${i})">💾 Simpan</button>
-            <button class="danger" onclick="adminDelete('${g.key}','${item.name}')">🗑 Hapus</button>
+        const rowId = `admin-${g.key}-${i}`;
+        html += `<tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td><input type="text" id="${rowId}-name" value="${escHtml(item.name)}" class="admin-name-input"></td>
+          <td><input type="number" id="${rowId}-score" value="${item.score}" class="admin-score-input" min="0"></td>
+          <td style="text-align:center;">
+            <button class="admin-action-btn" onclick="adminSave('${g.key}','${escHtml(item.name)}',${i})">💾 Simpan</button>
+            <button class="admin-action-btn danger" onclick="adminDelete('${g.key}','${escHtml(item.name)}')">🗑</button>
           </td>
         </tr>`;
       });
-      html += '</table>';
+      html += '</tbody></table>';
     }
     html += '</div>';
   }
 
-  html += '<p style="text-align:center;color:#999;font-size:11px;margin-top:8px;">Data lokal (browser ini) + data dari server.</p>';
-  div.innerHTML = html;
-  window._adminPass = pass;
+  container.innerHTML = html;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 function adminSave(game, oldName, idx) {
-  const id = `admin-${game}-${idx}`;
-  const newName = document.getElementById(`${id}-name`).value.trim();
-  const score = parseInt(document.getElementById(`${id}-score`).value);
-  if (!newName || isNaN(score)) return;
+  const rowId = `admin-${game}-${idx}`;
+  const newNameEl = document.getElementById(`${rowId}-name`);
+  const scoreEl = document.getElementById(`${rowId}-score`);
+  if (!newNameEl || !scoreEl) return;
+
+  const newName = newNameEl.value.trim();
+  const score = parseInt(scoreEl.value);
+  if (!newName || isNaN(score) || score < 0) return;
 
   // Update localStorage
   const localKey = game + 'Scores';
@@ -1537,15 +1617,21 @@ function adminSave(game, oldName, idx) {
   fetch(API_BASE + '/api/score', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'update', password: window._adminPass, game, name: oldName, newName, score })
+    body: JSON.stringify({ action: 'update', password: adminPass, game, name: oldName, newName, score })
+  }).then(() => {
+    fetch(API_BASE + '/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', password: adminPass })
+    })
+    .then(r => r.json())
+    .then(data => { if (!data.error) { adminData = data; renderAdminContent(); } })
+    .catch(() => {});
   }).catch(() => {});
-
-  // Re-fetch dashboard
-  setTimeout(() => adminRefresh(), 300);
 }
 
 function adminDelete(game, name) {
-  if (!confirm(`Hapus "${name}"?`)) return;
+  if (!confirm(`Hapus skor "${name}" dari ${game}?`)) return;
 
   // Delete from localStorage
   const localKey = game + 'Scores';
@@ -1557,21 +1643,17 @@ function adminDelete(game, name) {
   fetch(API_BASE + '/api/score', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'delete', password: window._adminPass, game, name })
+    body: JSON.stringify({ action: 'delete', password: adminPass, game, name })
+  }).then(() => {
+    fetch(API_BASE + '/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', password: adminPass })
+    })
+    .then(r => r.json())
+    .then(data => { if (!data.error) { adminData = data; renderAdminContent(); } })
+    .catch(() => {});
   }).catch(() => {});
-
-  setTimeout(() => adminRefresh(), 300);
-}
-
-function adminRefresh() {
-  fetch(API_BASE + '/api/score', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'list', password: window._adminPass })
-  })
-  .then(r => r.json())
-  .then(data => { if (!data.error) renderAdminDashboard(data, window._adminPass); })
-  .catch(() => {});
 }
 
 // ========== INIT ==========
