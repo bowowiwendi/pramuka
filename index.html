@@ -1199,8 +1199,15 @@ function saveGameScores(game, scores) {
 function submitGameScore(game, name, score) {
   const scores = getGameScores(game);
   const existing = scores.find(s => s.name === name);
-  if (existing) existing.score = Math.max(existing.score, score);
-  else scores.push({ name, score });
+  if (game === 'cc') {
+    // Cerdas cermat: skor terus bertambah setiap bermain
+    if (existing) existing.score += score;
+    else scores.push({ name, score });
+  } else {
+    // Morse & semaphore: simpan skor terbaik
+    if (existing) existing.score = Math.max(existing.score, score);
+    else scores.push({ name, score });
+  }
   scores.sort((a, b) => b.score - a.score);
   saveGameScores(game, scores);
 
@@ -1225,7 +1232,7 @@ function renderLeaderboardBody(bodyId, scores) {
     if (i === 0) rc = 'gold';
     else if (i === 1) rc = 'silver';
     else if (i === 2) rc = 'bronze';
-    row.innerHTML = `<div class="rank ${rc}">${i + 1}</div><div class="name">${s.name}</div><div class="score">${s.score}${bodyId === 'lbCcBody' ? '/25' : ''}</div>`;
+    row.innerHTML = `<div class="rank ${rc}">${i + 1}</div><div class="name">${s.name}</div><div class="score">${s.score}</div>`;
     body.appendChild(row);
   });
 }
@@ -1472,13 +1479,21 @@ function ccShowQuestion() {
   document.getElementById('ccFinishBtn').style.display = 'none';
   ccState.answered = false;
 
+  // Acak pilihan jawaban
+  const shuffled = data.o.map((opt, i) => ({ text: opt, isCorrect: i === data.a }));
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
   const container = document.getElementById('ccOptions');
   container.innerHTML = '';
-  data.o.forEach((opt, i) => {
+  shuffled.forEach((item, i) => {
     const btn = document.createElement('button');
     btn.className = 'cc-opt';
-    btn.innerHTML = `<span class="label">${CC_LABELS[i]}</span> ${opt}`;
+    btn.innerHTML = `<span class="label">${CC_LABELS[i]}</span> ${item.text}`;
     btn.addEventListener('click', () => ccAnswer(i, btn));
+    if (item.isCorrect) btn._isCorrect = true;
     container.appendChild(btn);
   });
 }
@@ -1486,19 +1501,18 @@ function ccShowQuestion() {
 function ccAnswer(idx, btn) {
   if (ccState.answered) return;
   ccState.answered = true;
-  const data = CC_QUESTIONS[ccState.current];
   const allBtns = document.querySelectorAll('#ccOptions .cc-opt');
   allBtns.forEach(b => b.disabled = true);
 
-  if (idx === data.a) {
+  if (btn._isCorrect) {
     ccState.score++;
     btn.classList.add('correct');
     document.getElementById('ccResult').textContent = '✅ Benar!';
     document.getElementById('ccResult').className = 'result-msg correct';
   } else {
     btn.classList.add('wrong');
-    allBtns[data.a].classList.add('correct');
-    document.getElementById('ccResult').textContent = `❌ Salah! Jawaban: ${CC_LABELS[data.a]}`;
+    allBtns.forEach(b => { if (b._isCorrect) b.classList.add('correct'); });
+    document.getElementById('ccResult').textContent = '❌ Salah!';
     document.getElementById('ccResult').className = 'result-msg wrong';
   }
 
