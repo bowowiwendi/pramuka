@@ -160,6 +160,41 @@ export default async function handler(req, res) {
   const game = body.game || req.query?.game || '';
   const prefix = getPrefix(game);
 
+  // === GLOBAL: combine all games ===
+  if (game === 'global') {
+    const allGames = ['morse', 'semaphore', 'cc'];
+    if (redis) {
+      try {
+        const combined = {};
+        for (const g of allGames) {
+          const p = getPrefix(g);
+          const keys = await redisKeys(redis, `${p}*`);
+          for (const key of keys) {
+            const n = key.replace(p, '');
+            const val = await redisGet(redis, key);
+            if (val !== null) combined[n] = (combined[n] || 0) + val;
+          }
+        }
+        const entries = Object.entries(combined).map(([name, score]) => ({ name, score }));
+        entries.sort((a, b) => b.score - a.score);
+        return res.json(entries);
+      } catch (err) {
+        return res.status(500).json({ error: 'Redis error: ' + err.message });
+      }
+    }
+
+    const stores = [morseScores, semaScores, ccScores];
+    const combined = {};
+    for (const store of stores) {
+      for (const s of store) {
+        combined[s.name] = (combined[s.name] || 0) + s.score;
+      }
+    }
+    const entries = Object.entries(combined).map(([name, score]) => ({ name, score }));
+    entries.sort((a, b) => b.score - a.score);
+    return res.json(entries);
+  }
+
   if (redis) {
     try {
       if (req.method === 'POST') {

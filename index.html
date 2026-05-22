@@ -706,6 +706,7 @@ h1 small { display: block; font-size: 14px; color: #555; font-weight: normal; }
       <button class="lb-tab active" data-lb="morse">🎯 Morse</button>
       <button class="lb-tab" data-lb="sema">🚩 Semaphore</button>
       <button class="lb-tab" data-lb="cc">🧠 Cerdas Cermat</button>
+      <button class="lb-tab" data-lb="global">🌐 Global</button>
     </div>
 
     <div class="lb-section active" id="lb-morse">
@@ -729,10 +730,19 @@ h1 small { display: block; font-size: 14px; color: #555; font-weight: normal; }
     <div class="lb-section" id="lb-cc">
       <div class="info-box">
         <h3>🧠 Peringkat Cerdas Cermat</h3>
-        <p>Skor dari 25 soal cerdas cermat.</p>
+        <p>Skor dari soal cerdas cermat.</p>
       </div>
       <div class="lb-header"><span>#</span><span>Nama</span><span style="text-align:right;">Skor</span></div>
       <div id="lbCcBody"></div>
+    </div>
+
+    <div class="lb-section" id="lb-global">
+      <div class="info-box">
+        <h3>🌐 Peringkat Global</h3>
+        <p>Akumulasi skor dari semua game (Morse + Semaphore + Cerdas Cermat).</p>
+      </div>
+      <div class="lb-header"><span>#</span><span>Nama</span><span style="text-align:right;">Total</span></div>
+      <div id="lbGlobalBody"></div>
     </div>
 
     <div class="lb-refresh">
@@ -1337,6 +1347,7 @@ function loadLeaderboard() {
   renderLeaderboardBody('lbMorseBody', getGameScores('morse'));
   renderLeaderboardBody('lbSemaBody', getGameScores('semaphore'));
   renderLeaderboardBody('lbCcBody', getGameScores('cc'));
+  renderGlobalLeaderboard();
 
   // Try API for each game
   ['morse', 'semaphore', 'cc'].forEach(game => {
@@ -1345,9 +1356,28 @@ function loadLeaderboard() {
       .then(data => {
         const bodyId = game === 'cc' ? 'lbCcBody' : game === 'semaphore' ? 'lbSemaBody' : 'lbMorseBody';
         if (data && data.length) renderLeaderboardBody(bodyId, data);
+        renderGlobalLeaderboard();
       })
       .catch(() => {});
   });
+
+  // Try API global
+  fetch(API_BASE + '/api/score?game=global')
+    .then(r => r.json())
+    .then(data => { if (data && data.length) renderLeaderboardBody('lbGlobalBody', data); })
+    .catch(() => {});
+}
+
+function renderGlobalLeaderboard() {
+  const combined = {};
+  for (const game of ['morse', 'semaphore', 'cc']) {
+    for (const s of getGameScores(game)) {
+      combined[s.name] = (combined[s.name] || 0) + s.score;
+    }
+  }
+  const entries = Object.entries(combined).map(([name, score]) => ({ name, score }));
+  entries.sort((a, b) => b.score - a.score);
+  renderLeaderboardBody('lbGlobalBody', entries);
 }
 
 function showNameModal() {
