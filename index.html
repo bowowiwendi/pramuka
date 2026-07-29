@@ -1415,134 +1415,84 @@ document.querySelectorAll('.lb-tab').forEach(tab => {
 
 // ========== CERDAS CERMAT ==========
 const CC_TIME = 40 * 60; // 40 menit dalam detik
-const CC_TOTAL = 25;
+const CC_TOTAL = 15;
 const CC_LABELS = ['A', 'B', 'C', 'D'];
 
 const CC_QUESTIONS = [
   {
-    q: 'Siapakah yang dikenal sebagai Bapak Pandu Sedunia (Bapak Pramuka Dunia)?',
-    o: ['Robert Baden-Powell', 'Lord Boden-Powell', 'Sir Robert Stephenson Smyth Baden-Powell', 'Jenderal Baden-Powell'],
-    a: 2
-  },
-  {
-    q: 'Apa nama buku yang ditulis oleh Baden-Powell yang menjadi dasar gerakan kepanduan?',
-    o: ['Aids to Scouting', 'Scouting for Boys', 'Scouting and Guiding', 'Boy Scout Handbook'],
-    a: 1
-  },
-  {
-    q: 'Pada tanggal berapa gerakan Pramuka diperkenalkan di Indonesia?',
-    o: ['20 Mei 1961', '14 Agustus 1961', '28 Oktober 1961', '1 Juni 1961'],
-    a: 1
-  },
-  {
-    q: 'Apa kepanjangan dari PRAMUKA?',
-    o: ['Praja Muda Karana', 'Pramuka Muda Karana', 'Praja Muda Karya', 'Pramudya Karana'],
+    q: 'Apa nama kegiatan perkemahan Pramuka tingkat Nasional?',
+    o: ['Jambore Nasional (JAMNAS)', 'Jambore Daerah (JAMDA)', 'Perkemahan Wirakarya', 'Raimuna Nasional'],
     a: 0
   },
   {
-    q: 'Apa lambang gerakan Pramuka Indonesia?',
-    o: ['Tunas Kelapa', 'Bunga Teratai', 'Pohon Beringin', 'Siaga'],
+    q: 'Indonesia Emas 2045 merupakan visi Indonesia pada saat usia berapa tahun merdeka?',
+    o: ['50 tahun', '100 tahun', '150 tahun', '200 tahun'],
+    a: 1
+  },
+  {
+    q: 'Apa motto Gerakan Pramuka Indonesia?',
+    o: ['Satyaku Kudarmakan Darmaku Kubaktikan', 'Satyaku Kudarmakan Darmaku Kubenarkan', 'Praja Muda Karana', 'Satyaku Kudarmakan Darmaku Kujalankan'],
     a: 0
   },
   {
-    q: 'Siapa yang menciptakan lambang gerakan Pramuka?',
-    o: ['Sri Sultan Hamengkubuwono IX', 'Soenardjo Atmodipoero', 'Ir. Soekarno', 'Dr. Radjiman Wedyodiningrat'],
-    a: 1
-  },
-  {
-    q: 'Tingkatan Pramuka untuk usia 7-10 tahun disebut?',
-    o: ['Penggalang', 'Penegak', 'Siaga', 'Pandega'],
-    a: 2
-  },
-  {
-    q: 'Tingkatan Pramuka untuk usia 11-15 tahun disebut?',
-    o: ['Siaga', 'Penegak', 'Pandega', 'Penggalang'],
-    a: 3
-  },
-  {
-    q: 'Tingkatan Pramuka untuk usia 16-20 tahun disebut?',
-    o: ['Penggalang', 'Pandega', 'Penegak', 'Siaga'],
-    a: 2
-  },
-  {
-    q: 'Ada berapa butir Dasa Darma Pramuka?',
-    o: ['8', '9', '10', '11'],
-    a: 2
-  },
-  {
-    q: 'Apa bunyi Dasa Darma yang pertama?',
-    o: ['Cinta alam dan kasih sayang sesama manusia', 'Takwa kepada Tuhan Yang Maha Esa', 'Patuh dan suka bermusyawarah', 'Disiplin, berani, dan setia'],
-    a: 1
-  },
-  {
-    q: 'Tri Satya Pramuka terdiri dari berapa butir?',
-    o: ['2', '3', '4', '5'],
-    a: 1
-  },
-  {
-    q: 'Apa nama pertemuan besar Pramuka tingkat dunia?',
-    o: ['Perkemahan', 'Jambore', 'Raimuna', 'Lomba Tingkat'],
-    a: 1
-  },
-  {
-    q: 'Di negara mana Jambore Dunia pertama kali diadakan pada tahun 1920?',
-    o: ['Amerika Serikat', 'Perancis', 'Inggris (Olympia, London)', 'Belanda'],
-    a: 2
-  },
-  {
-    q: 'Apa warna dasar Tanda Kecakapan Khusus (TKK)?',
-    o: ['Biru', 'Merah', 'Hijau', 'Kuning'],
-    a: 1
-  },
-  {
-    q: 'Apa kepanjangan dari TKK dalam Pramuka?',
-    o: ['Tanda Kecakapan Kepramukaan', 'Tanda Keterampilan Khusus', 'Tanda Kecakapan Khusus', 'Tingkat Kecakapan Karya'],
-    a: 2
-  },
-  {
-    q: 'Simpul apa yang digunakan untuk mengikat tali pada tiang atau palang?',
-    o: ['Simpul mati', 'Simpul pangkal', 'Simpul anyam', 'Simpul tiang'],
-    a: 1
-  },
-  {
-    q: 'Apa warna bendera Gerakan Pramuka Indonesia?',
-    o: ['Merah dan putih', 'Coklat dan hijau', 'Kuning dan coklat', 'Hijau dan putih'],
-    a: 1
-  },
-  {
-    q: 'Berapa jumlah anggota ideal dalam satu regu Pramuka Penggalang?',
-    o: ['3-5 orang', '5-10 orang', '8-12 orang', '10-15 orang'],
-    a: 1
-  },
-  {
-    q: 'Apa nama kegiatan perkemahan Pramuka?',
-    o: ['Persari', 'Perkemahan', 'Jambore', 'Semua benar'],
-    a: 3
-  },
-  {
-    q: 'Apa nama satuan terkecil dalam Pramuka Siaga?',
-    o: ['Regu', 'Barung', 'Sangga', 'Kwartir'],
-    a: 1
-  },
-  {
-    q: 'Apa yang dimaksud dengan pionering dalam Pramuka?',
-    o: ['Memasak di alam', 'Membuat bangunan dari tongkat dan tali', 'Bernyanyi bersama', 'Mendirikan tenda'],
-    a: 1
-  },
-  {
-    q: 'Apa nama lagu Mars Pramuka?',
-    o: ['Pramuka Sejati', 'Mars Pramuka (Kami Pramuka Indonesia)', 'Hymne Pramuka', 'Pramuka Indonesia'],
-    a: 1
-  },
-  {
-    q: 'Siapa tokoh Pramuka Indonesia yang juga menjabat sebagai Wakil Presiden RI?',
-    o: ['Sri Sultan Hamengkubuwono IX', 'B.J. Habibie', 'Jenderal Soedirman', 'Mohammad Hatta'],
+    q: 'Gerakan Pramuka bertujuan membentuk generasi muda yang disebut...',
+    o: ['Tunas Harapan Bangsa', 'Generasi Emas', 'Penerus Bangsa', 'Kader Bangsa'],
     a: 0
   },
   {
-    q: 'Apa kode kehormatan untuk Pramuka Siaga?',
-    o: ['Dasa Darma dan Tri Satya', 'Dwi Darma dan Dwi Satya', 'Tri Satya dan Dasa Darma', 'Catur Darma'],
+    q: 'Kepala Majelis Pembimbing Gugusdepan (Kamabigus) biasanya dijabat oleh...',
+    o: ['Kepala Sekolah', 'Ketua Kwartir', 'Pembina Pramuka', 'Kepala Desa'],
+    a: 0
+  },
+  {
+    q: 'Pembina Pramuka yang membimbing langsung satuan Pramuka disebut...',
+    o: ['Pembina', 'Pelatih', 'Andalan', 'Majelis Pembimbing'],
+    a: 0
+  },
+  {
+    q: '"Hemat, cermat dan bersahaja" merupakan bunyi Dasa Darma yang ke berapa?',
+    o: ['6', '7', '8', '9'],
     a: 1
+  },
+  {
+    q: '"Menolong sesama hidup dan mempersiapkan diri membangun masyarakat" merupakan bagian dari...',
+    o: ['Tri Satya', 'Dasa Darma', 'Pancasila', 'UUD 1945'],
+    a: 0
+  },
+  {
+    q: 'Tanda Kecakapan Umum (TKU) Penggalang berwarna dasar apa?',
+    o: ['Hijau', 'Merah', 'Biru', 'Kuning'],
+    a: 1
+  },
+  {
+    q: 'Sebutkan 3 tingkatan dalam Pramuka Penggalang!',
+    o: ['Ramu, Rakit, Terap', 'Siaga, Penggalang, Penegak', 'Putra, Putri, Campuran', 'Dasar, Menengah, Atas'],
+    a: 0
+  },
+  {
+    q: 'Berapa ukuran standar bendera Semaphore?',
+    o: ['45 cm x 45 cm', '40 cm x 40 cm', '50 cm x 50 cm', '35 cm x 35 cm'],
+    a: 0
+  },
+  {
+    q: 'Siapa penemu sandi Morse pada tahun 1837?',
+    o: ['Samuel F.B. Morse (Amerika Serikat)', 'Alexander Graham Bell (Inggris)', 'Thomas Alva Edison (Amerika Serikat)', 'Guglielmo Marconi (Italia)'],
+    a: 0
+  },
+  {
+    q: 'Alat yang digunakan untuk menentukan arah mata angin adalah...',
+    o: ['Kompas', 'Barometer', 'Termometer', 'Anemometer'],
+    a: 0
+  },
+  {
+    q: 'Alat yang digunakan Pramuka untuk menaksir tinggi pohon adalah...',
+    o: ['Tongkat Pramuka', 'Meteran rol', 'Penggaris', 'Klinometer'],
+    a: 0
+  },
+  {
+    q: 'Siapa yang menciptakan lambang Gerakan Pramuka?',
+    o: ['Soenardjo Atmodipoero', 'Sri Sultan Hamengkubuwono IX', 'Ir. Soekarno', 'B.J. Habibie'],
+    a: 0
   }
 ];
 
